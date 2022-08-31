@@ -1,16 +1,12 @@
-const fetch = require('node-fetch')
-const express = require('express')
-const app = express()
+const app = require('./app'); //Since we have created our app module we can require the module
+const dotenv = require('dotenv'); //For Reading .env File  - This file is going to be important in the futur when are going to host our database
+const {Sequelize} = require('sequelize');
+dotenv.config({ path: './.env'});
+const sequelize = require('./config/db');
 
-const port = 3000
+sequelize.sync();
 
-app.post('/location_specific_service', async (req, res) => {
-  var fetch_res = await fetch(`https://ipapi.co/${req.ip}/json/`);
-  var fetch_data = await res.json()
-
-  res.send(`You are from ${fetch_data.region}`)
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+const port = process.env.PORT || 3000;
+app.listen(port, ()=>{
+    console.log(`Application running on port ${port}`);
+});
