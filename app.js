@@ -1,27 +1,48 @@
-//1 REQUIRE PACKAGES
-const express = require('express');
-const morgan = require('morgan');
-const globalErrHandler = require('./utils/errHandler.js');
-const cors = require('cors');
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
 
-const app = express();
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users');
 
-//2 REQUIRE ROUTES (WHICH WE DO NOT HAVE YET)
-const userRoute = require('./routes/userRoutes');
-const LoginRoute = require('./routes/loginRoutes');
-const DestinationRoute =require('./routes/destination.route');
+var app = express();
 
-//3 APP.USE MIDDLEWARE
+
+app.use(session({
+  secret : 'webslesson',
+  resave : true,
+  saveUninitialized : true
+}));
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+app.use(logger('dev'));
 app.use(express.json());
-app.use(cors());
-app.options('*', cors());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
 
-//4 CREATE API URL
-app.use('/api/user', userRoute);
-app.use('/api/login', LoginRoute);
-app.use('/api/destination',DestinationRoute);
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
+});
 
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-app.use(globalErrHandler);
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
 module.exports = app;
