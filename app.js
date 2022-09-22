@@ -1,48 +1,52 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+//1 REQUIRE PACKAGES
+const express = require('express');
+const morgan = require('morgan');
+const globalErrHandler = require('./utils/errHandler.js');
+const cors = require('cors');
+var Sequelize = require("sequelize");
+var session = require("express-session");
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var connect = require('connect');
+var bodyParser = require('body-parser');
+//var Cookies = require( 'cookies' );
+var cookieParser= require('cookie-parser');
 
-var app = express();
+// initalize sequelize with session store
+const app = express();
+//const body = connect();
 
 
-app.use(session({
-  secret : 'webslesson',
-  resave : true,
-  saveUninitialized : true
-}));
+//2 REQUIRE ROUTES (WHICH WE DO NOT HAVE YET)
+const userRoute = require('./routes/userRoutes');
+const LoginRoute = require('./routes/loginRoutes');
+const DestinationRoute =require('./routes/destination.route');
+const currentLocation = require('./models/curentlocation.Model');
+const { application } = require('express');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-app.use(logger('dev'));
+//3 APP.USE MIDDLEWARE
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(morgan('dev'));
+app.use(cors());
+app.options('*', cors());
+app.use(connect());
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json())
+
+app.use(session({ 
+	
+    secret: 'thisismysecretkey12s5fjdfkf45d',
+    resave: false,
+    saveUninitialized: true,
+    
+}));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+//4 CREATE API URL
+app.use('/api/user', userRoute);
+app.use('/api/login', LoginRoute);
+app.use('/api/destination',DestinationRoute);
+app.use('api/currentloaction',currentLocation);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
 
 module.exports = app;
